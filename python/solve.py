@@ -28,7 +28,6 @@ def solve_naive(instance: Instance) -> Solution:
     rp = instance.R_p
     cities = instance.cities
     affected_area = []
-    print("dim",dim)
     # Solution 1: Naive Greedy
     for a in range(service_radius+1): # Getting area covered by a tower
         upper = int(((service_radius**2)-(a**2))**0.5)
@@ -48,13 +47,21 @@ def solve_naive(instance: Instance) -> Solution:
                     num += 1
             cover_ratio[row][col] = num
 
-    while(len(cities)!=0):
+    overlap = np.zeros((dim,dim))
 
+    while(len(cities)!=0):
         #greedy step
         cover_ratio_flatten = cover_ratio.flatten()
-        max_index = np.argmax(cover_ratio_flatten)
-        max_row = max_index//dim
-        max_col = max_index%dim
+        max_value = np.max(cover_ratio_flatten)
+        maxes = [i for i, j in enumerate(cover_ratio_flatten) if j == max_value]
+        temp = np.inf
+        for y in maxes:
+            row = y//dim
+            col = y%dim
+            if(overlap[row][col]<temp):
+                temp = overlap[row][col]
+                max_row = row
+                max_col = col
         tower_to_add = Point(x=max_row, y=max_col)
         towers.append(tower_to_add)
         towers_readable.append([max_row,max_col])
@@ -87,8 +94,27 @@ def solve_naive(instance: Instance) -> Solution:
                     if row >=0 and col >=0 and row < dim and col < dim:
                         cover_ratio[row][col] -= 1
 
-            
-        print("city:" ,len(cities))
+        
+            for combi in affected_area:
+                combi_index_0 = combi[0]
+                combi_index_1 = combi[1]
+                tower_index_0 = tower_to_add.x
+                tower_index_1 = tower_to_add.y
+    
+                new_index_1 = [element1 + element2 for (element1, element2) in zip([tower_index_0,tower_index_1],[combi_index_0,combi_index_1])]
+                new_index_2 = [element1 + element2 for (element1, element2) in zip([tower_index_0,tower_index_1],[-combi_index_0,-combi_index_1])]
+                new_index_3 = [element1 + element2 for (element1, element2) in zip([tower_index_0,tower_index_1],[combi_index_0,-combi_index_1])]
+                new_index_4 = [element1 + element2 for (element1, element2) in zip([tower_index_0,tower_index_1],[-combi_index_0,combi_index_1])]
+                new_index = set()
+                new_index.add(tuple(new_index_1))
+                new_index.add(tuple(new_index_2))
+                new_index.add(tuple(new_index_3))
+                new_index.add(tuple(new_index_4))
+                for index in new_index:
+                    row = index[0]
+                    col = index[1]
+                    if row >=0 and col >=0 and row < dim and col < dim:
+                        overlap[row][col] += 1
 
         
 
